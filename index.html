@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>buy me lipgloss ♡</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
@@ -23,7 +23,7 @@
 
 <div class="container">
   <h1>buy me lipgloss ♡</h1>
-  <p>8 LYX → one very happy girl<br><span class="gloss">Lipstick Kiss Sparkles</span></p>
+  <p>8 LYX → one very happy girl<br><span class="gloss">Lipstick Sparkles</span></p>
   <button id="buyButton">send lipgloss money Heart Suit</button>
   <p id="status" style="margin-top:20px; font-size:1.2rem;"></p>
 </div>
@@ -31,38 +31,53 @@
 <script>
   const CONTRACT_ADDRESS = "0xd9145CCE52D386f254917e481eB44e9943F39138";
   const ABI = ["function buyLipgloss() external payable","function OFFER_PRICE() view returns (uint256)"];
-  
+
   document.getElementById("buyButton").onclick = async () => {
     const b = document.getElementById("buyButton"); b.disabled = true;
     status("opening wallet...");
 
-    if (!window.ethereum) { status("MetaMask not found! install it <3"); b.disabled = false; return; }
+    if (!window.ethereum) { status("MetaMask not found! install it ♡"); b.disabled = false; return; }
 
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
 
-    // auto switch/add LUKSO
-    try { await ethereum.request({method: 'wallet_switchEthereumChain', params:[{chainId:'0x2a'}]}); }
-    catch(e){ if(e.code===4902) await ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x2a',chainName:'LUKSO Mainnet',rpcUrls:['https://rpc.lukso.network'],nativeCurrency:{name:'LYX',symbol:'LYX',decimals:18},blockExplorerUrls:['https://explorer.lukso.network']}]); }
+    try {
+      await window.ethereum.request({method: "wallet_switchEthereumChain", params: [{chainId: "0x2a"}]});
+    } catch (e) {
+      if (e.code === 4902) {
+        await window.ethereum.request({method: "wallet_addEthereumChain", params: [{
+          chainId: "0x2a",
+          chainName: "LUKSO Mainnet",
+          rpcUrls: ["https://rpc.lukso.network"],
+          nativeCurrency: {name: "LYX", symbol: "LYX", decimals: 18},
+          blockExplorerUrls: ["https://explorer.execution.mainnet.lukso.network"]
+        }]});
+      }
+    }
 
     const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const price = await contract.OFFER_PRICE();
 
-    status("sending 8 LYX... Lipstick Kiss");
-    const tx = await contract.buyLipgloss({value: price, gasLimit: 200000});
-    await tx.wait();
-
-    status(`THANK YOU!! Heart Suit Heart Suit Heart Suit<br>8 LYX received!<br><a href="https://explorer.lukso.network/tx/${tx.hash}" target="_blank" style="color:#ff69b4;">view transaction</a>`);
-    for(let i=0;i<40;i++) setTimeout(()=>heart(),i*60);
+    try {
+      status("sending 8 LYX... Lipstick");
+      const tx = await contract.buyLipgloss({value: price, gasLimit: 200000});
+      await tx.wait();
+      status(`THANK YOU!! Heart Suit Heart Suit Heart Suit<br>8 LYX received!<br><a href="https://explorer.execution.mainnet.lukso.network/tx/${tx.hash}" target="_blank" style="color:#ff69b4;">view tx ♡</a>`);
+      for(let i=0;i<40;i++) setTimeout(heart, i*60);
+    } catch (err) {
+      status(err.code===4001 ? "aww you cancelled ♡" : "something went wrong :(");
+    }
     b.disabled = false;
   };
 
   function status(html){ document.getElementById("status").innerHTML = html; }
   function heart(){
-    const h=document.createElement("div"); h.innerHTML="Heart Suit";
-    h.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:${Math.random()*100}vh;font-size:2.5rem;pointer-events:none;animation:float 4s linear forwards;`;
-    document.body.appendChild(h); setTimeout(()=>h.remove(),4000);
+    const h = document.createElement("div");
+    h.innerHTML = "Heart Suit";
+    h.style.cssText = "position:fixed;left:"+Math.random()*100+"vw;top:"+Math.random()*100+"vh;font-size:2.5rem;pointer-events:none;z-index:9999;animation:float 4s linear forwards;";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),4000);
   }
   setInterval(()=>Math.random()<0.3&&heart(),800);
 </script>
