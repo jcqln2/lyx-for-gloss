@@ -4,64 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>buy me lipgloss ♡</title>
-  <!-- Fixed, working ethers.js CDN (2025) -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Patrick+Hand&display=swap');
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #ff69b4, #ff1493, #ff4500);
-      font-family: 'Patrick Hand', cursive;
-      color: white;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .container {
-      background: rgba(255,255,255,0.15);
-      padding: 40px 30px;
-      border-radius: 30px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      max-width: 420px;
-      animation: float 6s ease-in-out infinite;
-    }
-
-    h1 {
-      font-family: 'Comic Neue', cursive;
-      font-size: 4rem;
-      margin: 0 0 20px;
-      text-shadow: 4px 4px 0px #ff1493;
-    }
-
-    p {font-size: 1.5rem; margin: 20px 0;}
-    .gloss {font-size: 3rem; animation: pulse 2s infinite;}
-
-    button {
-      background: #ff1493;
-      color: white;
-      border: none;
-      padding: 18px 40px;
-      font-family: 'Comic Neue', cursive;
-      font-size: 1.8rem;
-      border-radius: 50px;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(255,20,147,0.5);
-      transition: all 0.3s;
-      margin-top: 20px;
-    }
-    button:hover {transform: scale(1.1); background: #ff69b4;}
-    button:disabled {opacity: 0.7; cursor: not-allowed;}
-
-    .hearts {position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;}
-
-    @keyframes float {0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)}}
-    @keyframes pulse {0%,100%{transform:scale(1)} 50%{transform:scale(1.2)}}
+    body{margin:0;min-height:100vh;background:linear-gradient(135deg,#ff69b4,#ff1493,#ff4500);font-family:'Patrick Hand',cursive;color:white;text-align:center;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .container{background:rgba(255,255,255,0.15);padding:40px 30px;border-radius:30px;backdrop-filter:blur(10px);box-shadow:0 20px 40px rgba(0,0,0,0.3);max-width:420px;animation:float 6s ease-in-out infinite}
+    h1{font-family:'Comic Neue',cursive;font-size:4rem;margin:0 0 20px;text-shadow:4px 4px 0 #ff1493}
+    p{font-size:1.5rem;margin:20px 0}
+    .gloss{font-size:3rem;animation:pulse 2s infinite}
+    button{background:#ff1493;color:white;border:none;padding:18px 40px;font-family:'Comic Neue',cursive;font-size:1.8rem;border-radius:50px;cursor:pointer;box-shadow:0 10px 30px rgba(255,20,147,0.5);transition:all .3s;margin-top:20px}
+    button:hover{transform:scale(1.1);background:#ff69b4}
+    button:disabled{opacity:0.7;cursor:not-allowed}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
   </style>
 </head>
 <body>
@@ -69,95 +24,47 @@
 <div class="container">
   <h1>buy me lipgloss ♡</h1>
   <p>8 LYX → one very happy girl<br><span class="gloss">Lipstick Kiss Sparkles</span></p>
-  
   <button id="buyButton">send lipgloss money Heart Suit</button>
   <p id="status" style="margin-top:20px; font-size:1.2rem;"></p>
 </div>
 
-<div class="hearts" id="hearts"></div>
-
 <script>
-  // YOUR REAL CONTRACT ADDRESS (correct checksum case!)
   const CONTRACT_ADDRESS = "0xd9145CCE52D386f254917e481eB44e9943F39138";
+  const ABI = ["function buyLipgloss() external payable","function OFFER_PRICE() view returns (uint256)"];
+  
+  document.getElementById("buyButton").onclick = async () => {
+    const b = document.getElementById("buyButton"); b.disabled = true;
+    status("opening wallet...");
 
-  const ABI = [
-    "function buyLipgloss() external payable",
-    "function OFFER_PRICE() view returns (uint256)"
-  ];
+    if (!window.ethereum) { status("MetaMask not found! install it <3"); b.disabled = false; return; }
 
-  let provider, signer, contract;
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
 
-  async function connectAndSend() {
-    const button = document.getElementById("buyButton");
-    button.disabled = true;
-    updateStatus("opening wallet...");
+    // auto switch/add LUKSO
+    try { await ethereum.request({method: 'wallet_switchEthereumChain', params:[{chainId:'0x2a'}]}); }
+    catch(e){ if(e.code===4902) await ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x2a',chainName:'LUKSO Mainnet',rpcUrls:['https://rpc.lukso.network'],nativeCurrency:{name:'LYX',symbol:'LYX',decimals:18},blockExplorerUrls:['https://explorer.lukso.network']}]); }
 
-    if (!window.ethereum) {
-      updateStatus("MetaMask not found! Get it <a href='https://metamask.io' target='_blank' style='color:#ff69b4;'>here</a> Heart Suit");
-      button.disabled = false;
-      return;
-    }
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    const price = await contract.OFFER_PRICE();
 
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    try {
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      const userAddr = await signer.getAddress();
+    status("sending 8 LYX... Lipstick Kiss");
+    const tx = await contract.buyLipgloss({value: price, gasLimit: 200000});
+    await tx.wait();
 
-      // Switch to LUKSO
-      try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2a' }] });
-      } catch (e) {
-        if (e.code === 4902) {
-          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
-            chainId: '0x2a',
-            chainName: 'LUKSO Mainnet',
-            rpcUrls: ['https://rpc.mainnet.lukso.network'],
-            nativeCurrency: { name: 'LYX', symbol: 'LYX', decimals: 18 },
-            blockExplorerUrls: ['https://explorer.execution.mainnet.lukso.network']
-          }]});
-        }
-      }
+    status(`THANK YOU!! Heart Suit Heart Suit Heart Suit<br>8 LYX received!<br><a href="https://explorer.lukso.network/tx/${tx.hash}" target="_blank" style="color:#ff69b4;">view transaction</a>`);
+    for(let i=0;i<40;i++) setTimeout(()=>heart(),i*60);
+    b.disabled = false;
+  };
 
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-      const price = await contract.OFFER_PRICE();
-      updateStatus("sending 8 LYX... Lipstick Kiss");
-
-      const tx = await contract.buyLipgloss({ value: price, gasLimit: 200000 });
-      await tx.wait();
-
-      updateStatus(`THANK YOU SO MUCH!! Heart Suit<br>8 LYX received!<br><a href='https://explorer.execution.mainnet.lukso.network/tx/${tx.hash}' target='_blank' style='color:#ff69b4;'>view tx</a>`);
-
-      // Heart explosion!
-      for(let i = 0; i < 40; i++) setTimeout(createHeart, i * 60);
-
-    } catch (err) {
-      console.error(err);
-      const msg = err.code === 4001 ? "aww cancelled, no worries Heart Suit" :
-                  err.message.includes("insufficient") ? "not enough LYX :(" :
-                  "oops! " + (err.message || err.reason || "try again");
-      updateStatus(msg);
-    }
-    button.disabled = false;
+  function status(html){ document.getElementById("status").innerHTML = html; }
+  function heart(){
+    const h=document.createElement("div"); h.innerHTML="Heart Suit";
+    h.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:${Math.random()*100}vh;font-size:2.5rem;pointer-events:none;animation:float 4s linear forwards;`;
+    document.body.appendChild(h); setTimeout(()=>h.remove(),4000);
   }
-
-  function updateStatus(html) {
-    document.getElementById("status").innerHTML = html;
-  }
-
-  function createHeart() {
-    const h = document.createElement("div");
-    h.innerHTML = "Heart Suit";
-    h.style.cssText = `position:fixed; left:${Math.random()*100}vw; top:${Math.random()*100}vh; font-size:2.5rem; pointer-events:none; animation:float 4s linear forwards;`;
-    document.body.appendChild(h);
-    setTimeout(() => h.remove(), 4000);
-  }
-
-  document.getElementById("buyButton").onclick = connectAndSend;
-
-  // floating hearts background
-  setInterval(() => Math.random() < 0.3 && createHeart(), 800);
+  setInterval(()=>Math.random()<0.3&&heart(),800);
 </script>
 
 </body>
