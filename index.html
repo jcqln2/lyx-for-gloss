@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>buy me lipgloss ♡</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Patrick+Hand&display=swap');
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff69b4, #ff1493, #ff4500);
+      font-family: 'Patrick Hand', cursive;
+      color: white;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      background: rgba(255,255,255,0.15);
+      padding: 40px 30px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      max-width: 420px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    h1 {
+      font-family: 'Comic Neue', cursive;
+      font-size: 4rem;
+      margin: 0 0 20px;
+      text-shadow: 4px 4px 0px #ff1493;
+    }
+
+    p {
+      font-size: 1.5rem;
+      margin: 20px 0;
+    }
+
+    .gloss {
+      font-size: 3rem;
+      animation: pulse 2s infinite;
+    }
+
+    button {
+      background: #ff1493;
+      color: white;
+      border: none;
+      padding: 18px 40px;
+      font-family: 'Comic Neue', cursive;
+      font-size: 1.8rem;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(255,20,147,0.5);
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      background: #ff69b4;
+    }
+
+    .hearts {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>buy me lipgloss ♡</h1>
+  <p>8 LYX → one very happy girl<br><span class="gloss">💄✨</span></p>
+  
+  <button id="buyButton">send lipgloss money 💕</button>
+  <p id="status" style="margin-top:20px; font-size:1.2rem;"></p>
+</div>
+
+<div class="hearts" id="hearts"></div>
+
+<script>
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+  // PUT YOUR CONTRACT ADDRESS HERE
+  const CONTRACT_ADDRESS = "0xd9139139139139139139139139139139139139138";  // ← change only if you redeploy
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+  const ABI = [
+    "function buyLipgloss() external payable",
+    "function OFFER_PRICE() view returns (uint256)"
+  ];
+
+  const provider = window.ethereum ? new ethers.providers.Web3Provider(window.ethereum) : null;
+  const contract = provider ? new ethers.Contract(CONTRACT_ADDRESS, ABI, provider.getSigner()) : null;
+
+  document.getElementById("buyButton").onclick = async () => {
+    if (!provider) {
+      alert("Please install MetaMask! 💕");
+      return;
+    }
+
+    document.getElementById("status").textContent = "opening wallet...";
+
+    try {
+      await provider.send("eth_requestAccounts", []);
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+
+      const price = await contract.OFFER_PRICE();
+      const tx = await contract.buyLipgloss({ value: price });
+
+      document.getElementById("status").textContent = "sending lipgloss money... 💌";
+      
+      await tx.wait();
+      
+      document.getElementById("status").innerHTML = 
+        `thank you SO much!!<br>8 LYX received ♡<br>you just made my day!`;
+
+      // cute hearts explosion
+      for(let i=0; i<30; i++) {
+        createHeart();
+      }
+    } catch (err) {
+      document.getElementById("status").textContent = 
+        err.message.includes("user rejected") ? "aww it's okay ♡" : "something went wrong :(";
+    }
+  };
+
+  function createHeart() {
+    const h = document.createElement("div");
+    h.innerHTML = "💕";
+    h.style.position = "fixed";
+    h.style.left = Math.random()*100 + "vw";
+    h.style.bottom = "-50px";
+    h.style.fontSize = "2rem";
+    h.style.animation = "float 4s linear forwards";
+    h.style.pointerEvents = "none";
+    document.getElementById("hearts").appendChild(h);
+    setTimeout(() => h.remove(), 4000);
+  }
+
+  // auto hearts on load
+  setInterval(() => Math.random()<0.3 && createHeart(), 800);
+</script>
+
+</body>
+</html>
